@@ -1,0 +1,35 @@
+services:
+  bind9:
+    image: internetsystemsconsortium/bind9:9.20 # Usamos la imagen oficial de BIND9
+    container_name: bind9
+    ports:
+      - "54:53/tcp"   # Exponer el puerto 53 (TCP) del contenedor en el puerto 54 del host
+      - "54:53/udp"   # Exponer el puerto 53 (UDP) del contenedor en el puerto 54 del host
+    networks:
+      bind9_subnet:
+        ipv4_address: 172.20.5.1
+    volumes:
+      - ./conf:/home/jose/compose/conf  # Mantenemos la ruta que especificaste
+      - ./zonas:/home/jose/compose/zonas
+    restart: always
+
+  cliente:
+    container_name: cliente
+    image: alpine:latest
+    tty: true
+    stdin_open: true
+    dns:
+      - 172.20.5.1  # Apunta al servidor DNS configurado en bind9
+    networks:
+      bind9_subnet:
+        ipv4_address: 172.20.5.2
+
+networks:
+  bind9_subnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          ip_range: 172.20.5.0/24
+          gateway: 172.20.5.254
+
